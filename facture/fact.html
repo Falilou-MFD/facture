@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <fieldset>
+        <legend>Informations Commande</legend>
+        <label for="Num_commande"> Numero de Commande</label> 
+        <input type="number" id = "Num_commande"><br> <br>
+        <label for="Date_commande"> Date de Commande</label>
+        <input type="date" id = "Date_commande"> <br>
+    </fieldset> <br><br>
+    <fieldset>
+        <legend>Informations Client</legend>
+        <label for="Nom_client"> Nom : </label> 
+        <input type="text" id = "Nom_client"><br><br>
+        <label for="Prenom_client"> Prenom : </label> 
+        <input type="text" id = "Prenom_client"><br> <br>
+        <label for="Adresse_client"> Adresse email : </label> 
+        <input type="email" id = "Adresse_client"><br> <br>
+        <label for="Telephone"> Telephone : </label>
+        <input type="text" id = "Telephone"><br>
+    </fieldset> <br>
+    <button type="button" onclick="verifierFormulaire()">Valider les informations</button> <br>
+    <fieldset id="articlesFieldset" disabled>
+        <legend>Liste Articles </legend>
+        <table>
+            <thead>
+                <tr>
+                    <th>Numero</th>
+                    <th>Designation</th>
+                    <th>Prix Unitaire</th>
+                    <th>Quantite</th>
+                    <th>Prix Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id = "tbody">
+                <tr>
+                    <td><input type="text" id = "Numero1"></td>
+                    <td><input type="text" id = "Designation1"></td>
+                    <td><input type="number" id = "Prix_unitaire1"></td>
+                    <td><input type="number" id = "Quantite1" onchange="totalPartiel()"></td>
+                    <td><input type="number" id = "Prix_Total1" readonly ></td>
+                    <td><button type="button" onclick="supprimerLigne(this)">Supprimer</button>
+                    <button type="button" onclick="modifierLigne(this)">Modifier</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- <button type="button" onclick="totalPartiel()"> Calculer Prix Total </button> -->
+        <!-- <label for="text" id = totaux size = 50 value="0" readonly ></label>
+        <label for="totaux">Prix total</label>
+        <input type="text" id = "totaux" size="50" readonly value="0"> <br> -->
+
+        <label for="totaux">Prix total</label>
+        <input type="text" id = "totaux" size="50" readonly value="0"> <br>
+        <br><br>
+        <button type="button" onclick="addArticle()"> Ajouter un Article </button> <br> <br>
+
+    </fieldset>
+    <button type="button" onclick="genererPDF()">Imprimer <img src="printer.svg" alt=""></button>
+
+    <button type="button" onclick="window.print()">Imprimer la facture</button>
+
+    <script> 
+    let nb = 1;
+
+        function totalPartiel(){
+            let prixUnitaire = parseFloat(document.getElementById("Prix_unitaire"+nb).value);
+            let quantite = parseFloat(document.getElementById("Quantite"+nb).value);
+            let total = prixUnitaire * quantite;
+            document.getElementById("Prix_Total"+nb).value = total;
+            let totaux = parseFloat(document.getElementById("totaux").value);
+            totaux += total;
+            document.getElementById("totaux").value = totaux;
+
+        }
+
+        function addArticle(){
+            nb++; 
+            let inputRef = document.createElement("input");
+            inputRef.setAttribute("id", "Numero"+nb);
+            inputRef.setAttribute("type", "text");
+
+            let inputDesi = document.createElement("input");
+            inputDesi.setAttribute("id", "Designation"+nb);
+            inputDesi.setAttribute("type", "text");
+
+            let inputPrix = document.createElement("input");
+            inputPrix.setAttribute("id", "Prix_unitaire"+nb);
+            inputPrix.setAttribute("type", "number");
+
+            let inputQuant = document.createElement("input");
+            inputQuant.setAttribute("id", "Quantite"+nb);
+            inputQuant.setAttribute("type", "number");
+            inputQuant.setAttribute("onchange", "totalPartiel()");
+
+            let inputTotal = document.createElement("input");
+            inputTotal.setAttribute("id", "Prix_Total"+nb);
+            inputTotal.setAttribute("type", "number");
+            inputTotal.setAttribute("readonly", "readonly");
+
+            let buttonSupp = document.createElement("button");
+            buttonSupp.setAttribute("type", "button");
+            buttonSupp.textContent = "Supprimer";
+            buttonSupp.setAttribute("onclick", "supprimerLigne(this)");
+
+            let buttonModif = document.createElement("button");
+            buttonModif.setAttribute("type", "button");
+            buttonModif.textContent = "Modifier";
+            buttonModif.setAttribute("onclick", "modifierLigne(this)");
+
+            let td_ref = document.createElement("td");
+            let td_des = document.createElement("td");
+            let td_prixU = document.createElement("td");
+            let td_quant = document.createElement("td");
+            let td_tot = document.createElement("td");
+            let td_actions = document.createElement("td");
+
+                
+
+
+            td_ref.appendChild(inputRef);
+            td_des.appendChild(inputDesi);
+            td_prixU.appendChild(inputPrix);
+            td_quant.appendChild(inputQuant);
+            td_tot.appendChild(inputTotal);
+            td_actions.appendChild(buttonSupp);
+            td_actions.appendChild(buttonModif);
+            
+
+
+            let tr = document.createElement("tr");
+            tr.appendChild(td_ref);
+            tr.appendChild(td_des);
+            tr.appendChild(td_prixU);
+            tr.appendChild(td_quant);
+            tr.appendChild(td_tot);
+            tr.appendChild(buttonSupp);
+            tr.appendChild(buttonModif);
+            tr.appendChild(td_actions);
+
+            document.getElementById("tbody").appendChild(tr);
+        }
+        function supprimerLigne(button) {
+            let row = button.parentNode.parentNode; 
+            row.remove(); 
+            totalPartiel();
+        }
+
+
+        function modifierLigne(button) {
+            let row = button.parentNode.parentNode; 
+            let inputs = row.getElementsByTagName("input"); 
+
+            for (let input of inputs) {
+                input.removeAttribute("readonly"); 
+            }
+        }
+
+        document.getElementById("Num_commande").min = 0
+
+        document.getElementById("Date_commande").value = new Date().toISOString().split("T")[0];
+        document.getElementById("Date_commande").min = new Date().toISOString().split("T")[0];
+
+        function verifierFormulaire() {
+            let numCommande = document.getElementById("Num_commande").value.trim();
+            let dateCommande = document.getElementById("Date_commande").value.trim();
+            let nomClient = document.getElementById("Nom_client").value.trim();
+            let prenomClient = document.getElementById("Prenom_client").value.trim();
+            let emailClient = document.getElementById("Adresse_client").value.trim();
+            let telClient = document.getElementById("Telephone").value.trim();
+
+            if (numCommande && dateCommande && nomClient && prenomClient && emailClient && telClient) {
+                document.getElementById("articlesFieldset").removeAttribute("disabled");
+                alert("Informations validées. Vous pouvez maintenant ajouter des articles.");
+            } else {
+                alert("Veuillez remplir toutes les informations avant d'ajouter des articles.");
+            }
+    }
+        function genererPDF() {
+                const { jsPDF } = window.jspdf;
+                let doc = new jsPDF();
+                doc.text("FACTURE", doc.internal.pageSize.getWidth() / 2, 10, { align: "center" }, { fontSize: 20 }, { fontStyle: "bold" }, { textColor: "blue" });
+                doc.text(`Numéro de commande: ${document.getElementById("Num_commande").value}`, 10, 20);
+                doc.text(`Date: ${document.getElementById("Date_commande").value}`, 10, 30);
+                doc.text(`Client: ${document.getElementById("Nom_client").value} ${document.getElementById("Prenom_client").value}`, 10, 40);
+                doc.text(`Email: ${document.getElementById("Adresse_client").value}`, 10, 50);
+                doc.text(`Téléphone: ${document.getElementById("Telephone").value}`, 10, 60);
+                let y = 80;
+                doc.text("Articles:", 10, y);
+                y += 10;
+                let headers = ["Numero", "Designation", "Prix Unitaire", "Quantite", "Total"];
+                doc.autoTable({ startY: y, head: [headers], body: getTableData() });
+                doc.text(`Total: ${document.getElementById("totaux").value} FCFA`, 20, doc.autoTable.previous.finalY + 10, { fontSize: 20 }, { fontStyle: "bold" });
+                doc.save("facture.pdf");
+            }
+            function getTableData() {
+                let data = [];
+                document.querySelectorAll("#tbody tr").forEach(tr => {
+                    let row = [];
+                    tr.querySelectorAll("input").forEach(input => {
+                        row.push(input.value);
+                    });
+                    data.push(row);
+                });
+                return data;
+            }
+            // Faire des champs obligatoires
+
+    </script>
+</body>
+</html>
